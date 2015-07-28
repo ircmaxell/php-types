@@ -1,0 +1,14 @@
+<?php
+
+$x = 1;
+$y = 2;
+-----
+Block#1
+    Expr_Assign
+        var: Var<int>#1<$x>
+        expr: LITERAL<int>(1)
+        result: Var<int>#4
+    Expr_Assign
+        var: Var<int>#5<$y>
+        expr: LITERAL<int>(2)
+        result: Var<int>#8
