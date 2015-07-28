@@ -228,7 +228,7 @@ class TypeReconstructor {
                 // TODO: we may be able to determine these...
                 return false;
         }
-        throw new \LogicException("Unknown variable op found: " . $var->getType());
+        throw new \LogicException("Unknown variable op found: " . $op->getType());
     }
 
     protected function resolveOp_Expr_Array(Operand $var, Op $op, SplObjectStorage $resolved) {
