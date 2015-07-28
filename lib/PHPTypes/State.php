@@ -72,7 +72,7 @@ class State {
 
     public $resolver;
 
-    public $calls;
+    public $callFinder;
 
     public $classResolves = [];
 
