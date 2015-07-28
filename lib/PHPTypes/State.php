@@ -98,9 +98,11 @@ class State {
         $traverser->addVisitor($declarations);
         $traverser->addVisitor($calls);
         $traverser->addVisitor($variables);
-        foreach ($this->blocks as $block) {
-            $traverser->traverse($block);
+
+        for ($i = 0; $i < count($this->blocks); $i++) {
+            $this->blocks[$i] = $traverser->traverse($this->blocks[$i]);
         }
+
         $this->variables = $variables->getVariables();
         $this->constants = $declarations->getConstants();
         $this->traits = $declarations->getTraits();
