@@ -1,7 +1,7 @@
 <?php
 
 /*
- * This file is part of Tuli, a static analyzer for PHP
+ * This file is part of PHP-Types, a type reconstruction lib for PHP
  *
  * @copyright 2015 Anthony Ferrara. All rights reserved
  * @license MIT See LICENSE at the root of the project for more info
@@ -16,7 +16,7 @@ use SplObjectStorage;
 
 class TypeReconstructor {
 
-    protected $state; 
+    protected $state;
 
     public function resolve(State $state) {
         $this->state = $state;
@@ -283,7 +283,7 @@ class TypeReconstructor {
         return false;
     }
 
-    protected function resolveOp_Expr_Cast_Object(Operand $var, Op $op, SplObjectStorage $resolved) {            
+    protected function resolveOp_Expr_Cast_Object(Operand $var, Op $op, SplObjectStorage $resolved) {
         if ($resolved->contains($op->expr)) {
             if ($resolved[$op->expr]->type->resolves(Type::object())) {
                 return [$resolved[$op->expr]];

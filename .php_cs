@@ -1,7 +1,7 @@
 <?php
 
 $header = <<<'EOF'
-This file is part of Tuli, a static analyzer for PHP
+This file is part of PHP-Types, a type reconstruction lib for PHP
 
 @copyright 2015 Anthony Ferrara. All rights reserved
 @license MIT See LICENSE at the root of the project for more info
@@ -45,7 +45,6 @@ return Symfony\CS\Config\Config::create()
     ->finder(
         Symfony\CS\Finder\DefaultFinder::create()
             ->in(__DIR__ . "/lib")
-            ->in(__DIR__ . "/bin")
             ->in(__DIR__ . "/test")
     )
 ;

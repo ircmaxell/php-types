@@ -1,13 +1,20 @@
 <?php
 
+/*
+ * This file is part of PHP-Types, a type reconstruction lib for PHP
+ *
+ * @copyright 2015 Anthony Ferrara. All rights reserved
+ * @license MIT See LICENSE at the root of the project for more info
+ */
+
 namespace PHPTypes;
 
+use PHPCfg\Parser;
+use PHPCfg\Printer;
+use PHPCfg\Traverser;
+use PHPCfg\Visitor;
 use PhpParser;
 use PhpParser\ParserFactory;
-use PHPCfg\Traverser;
-use PHPCfg\Parser;
-use PHPCfg\Visitor;
-use PHPCfg\Printer;
 
 class ReconstructorTest extends \PHPUnit_Framework_TestCase {
 
@@ -37,7 +44,7 @@ class ReconstructorTest extends \PHPUnit_Framework_TestCase {
         $dir = __DIR__ . '/../code';
         
         $iter = new \RecursiveIteratorIterator(
-            new \RecursiveDirectoryIterator($dir), 
+            new \RecursiveDirectoryIterator($dir),
             \RecursiveIteratorIterator::LEAVES_ONLY
         );
 

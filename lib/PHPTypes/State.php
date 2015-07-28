@@ -1,5 +1,12 @@
 <?php
 
+/*
+ * This file is part of PHP-Types, a type reconstruction lib for PHP
+ *
+ * @copyright 2015 Anthony Ferrara. All rights reserved
+ * @license MIT See LICENSE at the root of the project for more info
+ */
+
 namespace PHPTypes;
 
 use PHPCfg\Block;
