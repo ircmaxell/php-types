@@ -72,9 +72,15 @@ class State {
 
     public $resolver;
 
+    public $calls;
+
     public $classResolves = [];
 
     public $classResolvedBy = [];
+
+    public $methodCalls = [];
+
+    public $newCalls = [];
 
     public function __construct(array $blocks) {
         $this->blocks = $blocks;
@@ -103,6 +109,9 @@ class State {
         $this->methods = $declarations->getMethods();
         $this->functions = $declarations->getFunctions();
         $this->functionLookup = $this->buildFunctionLookup($declarations->getFunctions());
+        $this->callFinder = $calls;
+        $this->methodCalls = $this->findMethodCalls();
+        $this->newCalls = $this->findNewCalls();
         $this->computeTypeMatrix();
     }
 
@@ -180,5 +189,53 @@ class State {
                 $this->classResolvedBy[$name][$child] = $child;
             }
         }
+    }
+
+    private function findNewCalls() {
+        $newCalls = [];
+        foreach ($this->blocks as $block) {
+            $newCalls = $this->findTypedBlock("Expr_New", $block, $newCalls);
+        }
+        return $newCalls;
+    }
+
+    private function findMethodCalls() {
+        $methodCalls = [];
+        foreach ($this->blocks as $block) {
+            $methodCalls = $this->findTypedBlock("Expr_MethodCall", $block, $methodCalls);
+        }
+        return $methodCalls;
+    }
+
+    protected function findTypedBlock($type, Block $block, $result = []) {
+        $toProcess = new SplObjectStorage;
+        $processed = new SplObjectStorage;
+        $toProcess->attach($block);
+        while (count($toProcess) > 0) {
+            foreach ($toProcess as $block) {
+                $toProcess->detach($block);
+                $processed->attach($block);
+                foreach ($block->children as $op) {
+                    if ($op->getType() === $type) {
+                        $result[] = $op;
+                    }
+                    foreach ($op->getSubBlocks() as $name) {
+                        $sub = $op->$name;
+                        if (is_null($sub)) {
+                            continue;
+                        }
+                        if (!is_array($sub)) {
+                            $sub = [$sub];
+                        }
+                        foreach ($sub as $subb) {
+                            if (!$processed->contains($subb)) {
+                                $toProcess->attach($subb);
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        return $result;
     }
 }
