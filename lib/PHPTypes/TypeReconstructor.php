@@ -218,7 +218,7 @@ class TypeReconstructor {
                     }
                     return false;
                 }
-                break;
+                return false;
             case 'Expr_StaticCall':
                 return $this->resolveMethodCall($op->class, $op->name, $op, $resolved);
             case 'Expr_MethodCall':
