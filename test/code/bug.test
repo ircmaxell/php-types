@@ -1,0 +1,12 @@
+<?php
+
+~1;
+~"";
+-----
+Block#1
+    Expr_BitwiseNot
+        expr: LITERAL<int>(1)
+        result: Var<int>#2
+    Expr_BitwiseNot
+        expr: LITERAL<string>('')
+        result: Var<string>#4    

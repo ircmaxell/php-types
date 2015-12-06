@@ -151,6 +151,16 @@ class TypeReconstructor {
                     }
                 }
                 return false;
+            case 'Expr_BitwiseNot':
+                if ($resolved->contains($op->expr)) {
+                    switch ($resolved[$op->expr]->type) {
+                        case Type::TYPE_STRING:
+                            return [Type::string()];
+                        default:
+                            return [Type::int()];
+                    }
+                }
+                return false;
             case 'Expr_BinaryOp_Div':
             case 'Expr_BinaryOp_Plus':
             case 'Expr_BinaryOp_Minus':
