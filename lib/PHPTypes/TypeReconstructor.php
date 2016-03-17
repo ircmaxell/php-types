@@ -241,7 +241,7 @@ class TypeReconstructor {
         throw new \LogicException("Unknown variable op found: " . $op->getType());
     }
 
-    protected function resolveOp_Expr_Array(Operand $var, Op $op, SplObjectStorage $resolved) {
+    protected function resolveOp_Expr_Array(Operand $var, Op\Expr\Array_ $op, SplObjectStorage $resolved) {
         $types = [];
         foreach ($op->values as $value) {
             if (!isset($resolved[$value])) {
@@ -259,12 +259,12 @@ class TypeReconstructor {
         return [new Type(Type::TYPE_ARRAY)];
     }
 
-    protected function resolveOp_Expr_Cast_Array(Operand $var, Op $op, SplObjectStorage $resolved) {
+    protected function resolveOp_Expr_Cast_Array(Operand $var, Op\Expr\Cast\Array_ $op, SplObjectStorage $resolved) {
         // Todo: determine subtypes better
         return [new Type(Type::TYPE_ARRAY)];
     }
 
-    protected function resolveOp_Expr_ArrayDimFetch(Operand $var, Op $op, SplObjectStorage $resolved) {
+    protected function resolveOp_Expr_ArrayDimFetch(Operand $var, Op\Expr\ArrayDimFetch $op, SplObjectStorage $resolved) {
         if ($resolved->contains($op->var)) {
             // Todo: determine subtypes better
             $type = $resolved[$op->var];
@@ -279,21 +279,21 @@ class TypeReconstructor {
         return false;
     }
 
-    protected function resolveOp_Expr_Assign(Operand $var, Op $op, SplObjectStorage $resolved) {
+    protected function resolveOp_Expr_Assign(Operand $var, Op\Expr\Assign $op, SplObjectStorage $resolved) {
         if ($resolved->contains($op->expr)) {
             return [$resolved[$op->expr]];
         }
         return false;
     }
 
-    protected function resolveOp_Expr_AssignRef(Operand $var, Op $op, SplObjectStorage $resolved) {
+    protected function resolveOp_Expr_AssignRef(Operand $var, Op\Expr\AssignRef $op, SplObjectStorage $resolved) {
         if ($resolved->contains($op->expr)) {
             return [$resolved[$op->expr]];
         }
         return false;
     }
 
-    protected function resolveOp_Expr_Cast_Object(Operand $var, Op $op, SplObjectStorage $resolved) {
+    protected function resolveOp_Expr_Cast_Object(Operand $var, Op\Expr\Cast\Object_ $op, SplObjectStorage $resolved) {
         if ($resolved->contains($op->expr)) {
             if ($resolved[$op->expr]->type->resolves(Type::object())) {
                 return [$resolved[$op->expr]];
@@ -303,18 +303,18 @@ class TypeReconstructor {
         return false;
     }
      
-    protected function resolveOp_Expr_Clone(Operand $var, Op $op, SplObjectStorage $resolved) {
+    protected function resolveOp_Expr_Clone(Operand $var, Op\Expr\Clone_ $op, SplObjectStorage $resolved) {
         if ($resolved->contains($op->expr)) {
             return [$resolved[$op->expr]];
         }
         return false;
     }
 
-    protected function resolveOp_Expr_Closure(Operand $var, Op $op, SplObjectStorage $resolved) {
+    protected function resolveOp_Expr_Closure(Operand $var, Op\Expr\Closure $op, SplObjectStorage $resolved) {
         return [new Type(Type::TYPE_OBJECT, [], "Closure")];
     }
 
-    protected function resolveOp_Expr_FuncCall(Operand $var, Op $op, SplObjectStorage $resolved) {
+    protected function resolveOp_Expr_FuncCall(Operand $var, Op\Expr\FuncCall $op, SplObjectStorage $resolved) {
         if ($op->name instanceof Operand\Literal) {
             $name = strtolower($op->name->value);
             if (isset($this->state->functionLookup[$name])) {
@@ -342,7 +342,7 @@ class TypeReconstructor {
         return false;
     }
 
-    protected function resolveOp_Expr_List(Operand $var, Op $op, SplObjectStorage $resolved) {
+    protected function resolveOp_Expr_List(Operand $var, Op\Expr\List_ $op, SplObjectStorage $resolved) {
         if ($op->result === $var) {
             return [new Type(Type::TYPE_ARRAY)];
         }
@@ -350,7 +350,7 @@ class TypeReconstructor {
         return false;
     }
 
-    protected function resolveOp_Expr_New(Operand $var, Op $op, SplObjectStorage $resolved) {
+    protected function resolveOp_Expr_New(Operand $var, Op\Expr\New_ $op, SplObjectStorage $resolved) {
         $type = $this->getClassType($op->class, $resolved);
         if ($type) {
             return [$type];
@@ -358,7 +358,7 @@ class TypeReconstructor {
         return [Type::object()];
     }
 
-    protected function resolveOp_Expr_Param(Operand $var, Op $op, SplObjectStorage $resolved) {
+    protected function resolveOp_Expr_Param(Operand $var, Op\Expr\Param $op, SplObjectStorage $resolved) {
         $docType = Type::extractTypeFromComment("param", $op->function->getAttribute('doccomment'), $op->name->value);
         if ($op->type) {
             $type = Type::fromDecl($op->type->value);
@@ -405,7 +405,7 @@ class TypeReconstructor {
         return false;
     }
 
-    protected function resolveOp_Expr_ConstFetch(Operand $var, Op $op, SplObjectStorage $resolved) {
+    protected function resolveOp_Expr_ConstFetch(Operand $var, Op\Expr\ConstFetch $op, SplObjectStorage $resolved) {
         if ($op->name instanceof Operand\Literal) {
             $constant = strtolower($op->name->value);
             switch ($constant) {
@@ -430,7 +430,7 @@ class TypeReconstructor {
         return false;
     }
 
-    protected function resolveOp_Expr_ClassConstFetch(Operand $var, Op $op, SplObjectStorage $resolved) {
+    protected function resolveOp_Expr_ClassConstFetch(Operand $var, Op\Expr\ClassConstFetch $op, SplObjectStorage $resolved) {
         $classes = [];
         if ($op->class instanceof Operand\Literal) {
             $class = strtolower($op->class->value);
@@ -446,7 +446,7 @@ class TypeReconstructor {
         return false;
     }
 
-    protected function resolveOp_Phi(Operand $var, Op $op, SplObjectStorage $resolved) {
+    protected function resolveOp_Phi(Operand $var, Op\Phi $op, SplObjectStorage $resolved) {
         $types = [];
         $resolveFully = true;
         foreach ($op->vars as $v) {
