@@ -342,14 +342,6 @@ class TypeReconstructor {
         return false;
     }
 
-    protected function resolveOp_Expr_List(Operand $var, Op\Expr\List_ $op, SplObjectStorage $resolved) {
-        if ($op->result === $var) {
-            return [new Type(Type::TYPE_ARRAY)];
-        }
-        // TODO: infer this
-        return false;
-    }
-
     protected function resolveOp_Expr_New(Operand $var, Op\Expr\New_ $op, SplObjectStorage $resolved) {
         $type = $this->getClassType($op->class, $resolved);
         if ($type) {
@@ -505,7 +497,7 @@ class TypeReconstructor {
         }
     }
 
-    protected function resolveClassConstant($class, $op, $resolved) {
+    protected function resolveClassConstant($class, $op, SplObjectStorage $resolved) {
         $try = $class . '::' . $op->name->value;
         if (isset($this->state->constants[$try])) {
             $types = [];
@@ -577,7 +569,7 @@ class TypeReconstructor {
         return false;
     }
 
-    private function resolveMethodCall($class, $name, Op $op, \SplObjectStorage $resolved) {
+    private function resolveMethodCall($class, $name, Op $op, SplObjectStorage $resolved) {
         if (!$name instanceof Operand\Literal) {
             // Variable Method Call
             return false;
@@ -602,7 +594,7 @@ class TypeReconstructor {
                 if (isset($this->state->internalTypeInfo->methods[$className])) {
                     $types = [];
                     foreach ($this->state->internalTypeInfo->methods[$className]['extends'] as $child) {
-                        if (isset($thisstate->internalTypeInfo->methods[$child]['methods'][$name])) {
+                        if (isset($this->state->internalTypeInfo->methods[$child]['methods'][$name])) {
                             $method = $this->state->internalTypeInfo->methods[$child]['methods'][$name];
                             if ($method['return']) {
                                 $types[] = Type::fromDecl($method['return']);
@@ -642,7 +634,7 @@ class TypeReconstructor {
         return false;
     }
 
-    protected function getClassType(Operand $var, \SplObjectStorage $resolved) {
+    protected function getClassType(Operand $var, SplObjectStorage $resolved) {
         if ($var instanceof Operand\Literal) {
             return new Type(Type::TYPE_OBJECT, [], $var->value);
         } elseif ($var instanceof Operand\BoundVariable && $var->scope === Operand\BoundVariable::SCOPE_OBJECT) {
@@ -658,7 +650,7 @@ class TypeReconstructor {
         return false;
     }
 
-    protected function processAssertion(Assertion $assertion, Operand $source, \SplObjectStorage $resolved) {
+    protected function processAssertion(Assertion $assertion, Operand $source, SplObjectStorage $resolved) {
         if ($assertion instanceof Assertion\TypeAssertion) {
             $tmp = $this->processTypeAssertion($assertion, $source, $resolved);
             if ($tmp) {
@@ -678,7 +670,7 @@ class TypeReconstructor {
         return false;
     }
 
-    protected function processTypeAssertion(Assertion\TypeAssertion $assertion, Operand $source, \SplObjectStorage $resolved) {
+    protected function processTypeAssertion(Assertion\TypeAssertion $assertion, Operand $source, SplObjectStorage $resolved) {
         if ($assertion->value instanceof Operand) {
             if ($assertion->value instanceof Operand\Literal) {
                 return Type::fromDecl($assertion->value->value);
