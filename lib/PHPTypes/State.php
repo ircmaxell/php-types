@@ -14,13 +14,13 @@ use PHPCfg\Op;
 use PHPCfg\Operand;
 use PHPCfg\Traverser;
 use PHPCfg\Visitor;
+use PHPCfg\Script;
 use SplObjectStorage;
 
 class State {
     
-    /**
-     * @var Block[]
-     */
+    public $script;
+
     public $blocks = [];
 
     /**
@@ -82,8 +82,16 @@ class State {
 
     public $newCalls = [];
 
-    public function __construct(array $blocks) {
-        $this->blocks = $blocks;
+    public function __construct(Script $script) {
+        $this->script = $script;
+        foreach ($this->script->functions as $func) {
+            if (!is_null($func->cfg)) {
+                $this->blocks[] = $func->cfg;
+            }
+        }
+        if (!is_null($this->script->main->cfg)) {
+            $this->blocks[] = $this->script->main->cfg;
+        }
         $this->resolver = new TypeResolver($this);
         $this->internalTypeInfo = new InternalArgInfo;
         $this->load();
@@ -99,9 +107,7 @@ class State {
         $traverser->addVisitor($calls);
         $traverser->addVisitor($variables);
 
-        for ($i = 0; $i < count($this->blocks); $i++) {
-            $this->blocks[$i] = $traverser->traverse($this->blocks[$i]);
-        }
+        $this->script = $traverser->traverse($this->script);
 
         $this->variables = $variables->getVariables();
         $this->constants = $declarations->getConstants();
