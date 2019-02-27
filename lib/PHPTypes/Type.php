@@ -240,6 +240,9 @@ class Type
     public static function extractTypeFromComment($kind, $comment, $name = ''): self
     {
         $match = [];
+        if (null === $comment) {
+            return self::mixed();
+        }
         switch ($kind) {
             case 'var':
                 if (preg_match('(@var\s+(\S+))', $comment, $match)) {

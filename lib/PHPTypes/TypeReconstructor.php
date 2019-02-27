@@ -388,25 +388,23 @@ class TypeReconstructor
         return [Type::object()];
     }
 
+    protected function resolveDeclaredType(Op\Type $type): Type
+    {
+        if ($type instanceof Op\Type\Literal) {
+            return Type::fromDecl($type->name);
+        }
+    }
+
     protected function resolveOp_Expr_Param(Operand $var, Op\Expr\Param $op, SplObjectStorage $resolved)
     {
-        // $docType = Type::extractTypeFromComment("param", $op->function->getAttribute('doccomment'), $op->name->value);
-        if ($op->type) {
-            $type = Type::fromDecl($op->type->value);
-            if ($op->defaultVar) {
-                if ($op->defaultBlock->children[0]->getType() === 'Expr_ConstFetch' && strtolower($op->defaultBlock->children[0]->name->value) === 'null') {
-                    $type = (new Type(Type::TYPE_UNION, [$type, Type::null()]))->simplify();
-                }
+        $type = $this->resolveDeclaredType($op->declaredType);
+        if ($op->defaultVar) {
+            if ($op->defaultBlock->children[0]->getType() === 'Expr_ConstFetch' && strtolower($op->defaultBlock->children[0]->name->value) === 'null') {
+                $type = (new Type(Type::TYPE_UNION, [$type, Type::null()]))->simplify();
             }
-            // if ($docType !== Type::mixed() && $this->state->resolver->resolves($docType, $type)) {
-            //     // return the more specific
-            //     return [$docType];
-            // }
-            return [$type];
         }
 
-        return [Type::mixed()];
-        //return [$docType];
+        return [$type];
     }
 
     protected function resolveOp_Expr_StaticPropertyFetch(Operand $var, Op $op, SplObjectStorage $resolved)
@@ -744,16 +742,12 @@ class TypeReconstructor
                 }
                 $doc = Type::extractTypeFromComment('return', $method->getAttribute('doccomment'));
 
-                if (! isset($method->func->returnType)) {
+                $decl = $this->resolveDeclaredType($method->func->returnType);
+                if ($this->state->resolver->resolves($doc, $decl)) {
+                    // doc is a subset
                     $types[] = $doc;
                 } else {
-                    $decl = Type::fromDecl($method->func->returnType->value);
-                    if ($this->state->resolver->resolves($doc, $decl)) {
-                        // doc is a subset
-                        $types[] = $doc;
-                    } else {
-                        $types[] = $decl;
-                    }
+                    $types[] = $decl;
                 }
             }
             if (! empty($types)) {

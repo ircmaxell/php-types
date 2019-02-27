@@ -12,12 +12,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/ircmaxell/php-cfg.git",
-                "reference": "3293275374a2b66d4cf2f8726edc1800ef0ddac3"
+                "reference": "b41ccceafdab1946cbde88740d296909c27c2c65"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/ircmaxell/php-cfg/zipball/3293275374a2b66d4cf2f8726edc1800ef0ddac3",
-                "reference": "3293275374a2b66d4cf2f8726edc1800ef0ddac3",
+                "url": "https://api.github.com/repos/ircmaxell/php-cfg/zipball/b41ccceafdab1946cbde88740d296909c27c2c65",
+                "reference": "b41ccceafdab1946cbde88740d296909c27c2c65",
                 "shasum": ""
             },
             "require": {
@@ -46,7 +46,7 @@
                 }
             ],
             "description": "A Control Flow Graph implementation for PHP",
-            "time": "2019-02-27 17:17:42"
+            "time": "2019-02-27 17:55:34"
         },
         {
             "name": "nikic/php-parser",

@@ -5,9 +5,9 @@
 -----
 Block#1
     Expr_BitwiseNot
-        expr: LITERAL<int>(1)
-        result: Var<int>#1
+        expr: LITERAL<inferred:int>(1)
+        result: Var<inferred:int>#1
     Expr_BitwiseNot
-        expr: LITERAL<string>('')
-        result: Var<string>#2
+        expr: LITERAL<inferred:string>('')
+        result: Var<inferred:string>#2
     Terminal_Return

@@ -1,7 +1,9 @@
 <?php
 
-/*
- * This file is part of PHP-Types, a type reconstruction lib for PHP
+declare(strict_types=1);
+
+/**
+ * This file is part of PHP-Types, a Type Resolver implementation for PHP
  *
  * @copyright 2015 Anthony Ferrara. All rights reserved
  * @license MIT See LICENSE at the root of the project for more info
@@ -12,13 +14,15 @@ namespace PHPTypes;
 use PHPCfg\Op;
 use PHPCfg\Operand;
 
-class TypeInferer {
-    public function infer(array $components) {
+class TypeInferer
+{
+    public function infer(array $components)
+    {
         $this->components = $components;
-        $resolved = new \SplObjectStorage;
-        $unresolved = new \SplObjectStorage;
+        $resolved = new \SplObjectStorage();
+        $unresolved = new \SplObjectStorage();
         foreach ($components['variables'] as $op) {
-            if (!empty($op->type) && $op->type->type !== Type::TYPE_UNKNOWN && $op->type->type !== Type::TYPE_MIXED) {
+            if (! empty($op->type) && $op->type->type !== Type::TYPE_UNKNOWN && $op->type->type !== Type::TYPE_MIXED) {
                 $resolved[$op] = $op->type;
             } elseif ($op instanceof Operand\Literal) {
                 $resolved[$op] = Type::fromValue($op->value);
@@ -32,14 +36,14 @@ class TypeInferer {
         }
 
         do {
-            echo "Round " . $round++ . " (" . count($unresolved) . " unresolved variables out of " . count($components['variables']) . ")\n";
+            echo 'Round '.$round++.' ('.count($unresolved).' unresolved variables out of '.count($components['variables']).")\n";
             $start = round(count($resolved) / count($unresolved), 6);
             $i = 0;
             $toRemove = [];
             foreach ($unresolved as $k => $var) {
-                $i++;
+                ++$i;
                 if ($i % 10 === 0) {
-                    echo ".";
+                    echo '.';
                 }
                 if ($i % 800 === 0) {
                     echo "\n";
@@ -63,7 +67,8 @@ class TypeInferer {
         }
     }
 
-    protected function resloveVar(Op $var, \SplObjectStorage $resolved) {
+    protected function resloveVar(Op $var, \SplObjectStorage $resolved)
+    {
         var_dump($var);
     }
 }

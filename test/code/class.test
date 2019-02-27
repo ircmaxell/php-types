@@ -12,7 +12,7 @@ class A {
 -----
 Block#1
     Stmt_Class
-        name: LITERAL<string>('A')
+        name: LITERAL<inferred:string>('A')
         stmts: Block#2
     Terminal_Return
 
@@ -20,27 +20,29 @@ Block#2
     Stmt_ClassMethod<foo>
     Stmt_ClassMethod<bar>
 
-Function A::foo():
+Function A::foo(): int
 Block#1
     Expr_Param
+        declaredType: string
         name: LITERAL('abc')
-        result: Var<string>#1<$abc>
+        result: Var<inferred:string>#1<$abc>
     Expr_MethodCall
-        var: this<<A>$this>
-        name: LITERAL<string>('bar')
-        args[0]: Var<string>#1<$abc>
-        result: Var<int>#2
+        var: this<<inferred:A>$this>
+        name: LITERAL<inferred:string>('bar')
+        args[0]: Var<inferred:string>#1<$abc>
+        result: Var<inferred:int>#2
     Terminal_Return
-        expr: Var<int>#2
+        expr: Var<inferred:int>#2
 
-Function A::bar():
+Function A::bar(): int
 Block#1
     Expr_Param
+        declaredType: float
         name: LITERAL('def')
-        result: Var<float>#1<$def>
+        result: Var<inferred:float>#1<$def>
     Expr_FuncCall
-        name: LITERAL<string>('floor')
-        args[0]: Var<float>#1<$def>
-        result: Var<int>#2
+        name: LITERAL<inferred:string>('floor')
+        args[0]: Var<inferred:float>#1<$def>
+        result: Var<inferred:int>#2
     Terminal_Return
-        expr: Var<int>#2
+        expr: Var<inferred:int>#2
