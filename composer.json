@@ -9,12 +9,12 @@
         }
     ],
     "require": {
-        "php": ">=5.5",
-        "ircmaxell/php-cfg": "^0.5"
+        "php": ">=7.0",
+        "ircmaxell/php-cfg": "^1.0"
     },
     "require-dev": {
         "phpunit/phpunit": "^4.7",
-        "fabpot/php-cs-fixer": "1.*"
+        "friendsofphp/php-cs-fixer": "*"
     },
     "minimum-stability": "dev",
     "prefer-stable": true,

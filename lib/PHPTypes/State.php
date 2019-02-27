@@ -1,7 +1,9 @@
 <?php
 
-/*
- * This file is part of PHP-Types, a type reconstruction lib for PHP
+declare(strict_types=1);
+
+/**
+ * This file is part of PHP-Types, a Type Resolver implementation for PHP
  *
  * @copyright 2015 Anthony Ferrara. All rights reserved
  * @license MIT See LICENSE at the root of the project for more info
@@ -12,13 +14,13 @@ namespace PHPTypes;
 use PHPCfg\Block;
 use PHPCfg\Op;
 use PHPCfg\Operand;
+use PHPCfg\Script;
 use PHPCfg\Traverser;
 use PHPCfg\Visitor;
-use PHPCfg\Script;
 use SplObjectStorage;
 
-class State {
-    
+class State
+{
     public $script;
 
     public $blocks = [];
@@ -32,17 +34,17 @@ class State {
      * @var SplObjectStorage
      */
     public $variables;
-    
+
     /**
      * @var Op\Terminal\Const_[]
      */
     public $constants;
-    
+
     /**
      * @var Op\Stmt\Trait_[]
      */
     public $traits;
-    
+
     /**
      * @var Op\Stmt\Class_[]
      */
@@ -82,27 +84,62 @@ class State {
 
     public $newCalls = [];
 
-    public function __construct(Script $script) {
+    public function __construct(Script $script)
+    {
         $this->script = $script;
         foreach ($this->script->functions as $func) {
-            if (!is_null($func->cfg)) {
+            if (null !== $func->cfg) {
                 $this->blocks[] = $func->cfg;
             }
         }
-        if (!is_null($this->script->main->cfg)) {
+        if (null !== $this->script->main->cfg) {
             $this->blocks[] = $this->script->main->cfg;
         }
         $this->resolver = new TypeResolver($this);
-        $this->internalTypeInfo = new InternalArgInfo;
+        $this->internalTypeInfo = new InternalArgInfo();
         $this->load();
     }
 
+    protected function findTypedBlock($type, Block $block, $result = [])
+    {
+        $toProcess = new SplObjectStorage();
+        $processed = new SplObjectStorage();
+        $toProcess->attach($block);
+        while (count($toProcess) > 0) {
+            foreach ($toProcess as $block) {
+                $toProcess->detach($block);
+                $processed->attach($block);
+                foreach ($block->children as $op) {
+                    if ($op->getType() === $type) {
+                        $result[] = $op;
+                    }
+                    foreach ($op->getSubBlocks() as $name) {
+                        $sub = $op->{$name};
+                        if (null === $sub) {
+                            continue;
+                        }
+                        if (! is_array($sub)) {
+                            $sub = [$sub];
+                        }
+                        foreach ($sub as $subb) {
+                            if (! $processed->contains($subb)) {
+                                $toProcess->attach($subb);
+                            }
+                        }
+                    }
+                }
+            }
+        }
 
-    private function load() {
-        $traverser = new Traverser;
-        $declarations = new Visitor\DeclarationFinder;
-        $calls = new Visitor\CallFinder;
-        $variables = new Visitor\VariableFinder;
+        return $result;
+    }
+
+    private function load()
+    {
+        $traverser = new Traverser();
+        $declarations = new Visitor\DeclarationFinder();
+        $calls = new Visitor\CallFinder();
+        $variables = new Visitor\VariableFinder();
         $traverser->addVisitor($declarations);
         $traverser->addVisitor($calls);
         $traverser->addVisitor($variables);
@@ -123,20 +160,23 @@ class State {
         $this->computeTypeMatrix();
     }
 
-    private function buildFunctionLookup(array $functions) {
+    private function buildFunctionLookup(array $functions)
+    {
         $lookup = [];
         foreach ($functions as $function) {
             assert($function->name instanceof Operand\Literal);
             $name = strtolower($function->name->value);
-            if (!isset($lookup[$name])) {
+            if (! isset($lookup[$name])) {
                 $lookup[$name] = [];
             }
             $lookup[$name][] = $function;
         }
+
         return $lookup;
     }
 
-    private function computeTypeMatrix() {
+    private function computeTypeMatrix()
+    {
         // TODO: This is dirty, and needs cleaning
         // A extends B
         $map = []; // a => [a, b], b => [b]
@@ -183,14 +223,14 @@ class State {
                     $map[$mapped][$name] = $class;
                 }
             } else {
-                echo "Could not find parent $extends\n";
+                echo "Could not find parent ${extends}\n";
             }
         }
         $this->classResolves = $map;
         $this->classResolvedBy = [];
         foreach ($map as $child => $parent) {
             foreach ($parent as $name => $_) {
-                if (!isset($this->classResolvedBy[$name])) {
+                if (! isset($this->classResolvedBy[$name])) {
                     $this->classResolvedBy[$name] = [];
                 }
                 //allows iterating and looking udm_cat_path(agent, category)
@@ -199,51 +239,23 @@ class State {
         }
     }
 
-    private function findNewCalls() {
+    private function findNewCalls()
+    {
         $newCalls = [];
         foreach ($this->blocks as $block) {
-            $newCalls = $this->findTypedBlock("Expr_New", $block, $newCalls);
+            $newCalls = $this->findTypedBlock('Expr_New', $block, $newCalls);
         }
+
         return $newCalls;
     }
 
-    private function findMethodCalls() {
+    private function findMethodCalls()
+    {
         $methodCalls = [];
         foreach ($this->blocks as $block) {
-            $methodCalls = $this->findTypedBlock("Expr_MethodCall", $block, $methodCalls);
+            $methodCalls = $this->findTypedBlock('Expr_MethodCall', $block, $methodCalls);
         }
-        return $methodCalls;
-    }
 
-    protected function findTypedBlock($type, Block $block, $result = []) {
-        $toProcess = new SplObjectStorage;
-        $processed = new SplObjectStorage;
-        $toProcess->attach($block);
-        while (count($toProcess) > 0) {
-            foreach ($toProcess as $block) {
-                $toProcess->detach($block);
-                $processed->attach($block);
-                foreach ($block->children as $op) {
-                    if ($op->getType() === $type) {
-                        $result[] = $op;
-                    }
-                    foreach ($op->getSubBlocks() as $name) {
-                        $sub = $op->$name;
-                        if (is_null($sub)) {
-                            continue;
-                        }
-                        if (!is_array($sub)) {
-                            $sub = [$sub];
-                        }
-                        foreach ($sub as $subb) {
-                            if (!$processed->contains($subb)) {
-                                $toProcess->attach($subb);
-                            }
-                        }
-                    }
-                }
-            }
-        }
-        return $result;
+        return $methodCalls;
     }
 }

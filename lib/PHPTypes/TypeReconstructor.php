@@ -1,7 +1,9 @@
 <?php
 
-/*
- * This file is part of PHP-Types, a type reconstruction lib for PHP
+declare(strict_types=1);
+
+/**
+ * This file is part of PHP-Types, a Type Resolver implementation for PHP
  *
  * @copyright 2015 Anthony Ferrara. All rights reserved
  * @license MIT See LICENSE at the root of the project for more info
@@ -14,18 +16,19 @@ use PHPCfg\Op;
 use PHPCfg\Operand;
 use SplObjectStorage;
 
-class TypeReconstructor {
-
+class TypeReconstructor
+{
     protected $state;
 
-    public function resolve(State $state) {
+    public function resolve(State $state)
+    {
         $this->state = $state;
         // First resolve properties
         $this->resolveAllProperties();
-        $resolved = new SplObjectStorage;
-        $unresolved = new SplObjectStorage;
+        $resolved = new SplObjectStorage();
+        $unresolved = new SplObjectStorage();
         foreach ($state->variables as $op) {
-            if (!empty($op->type) && $op->type->type !== Type::TYPE_UNKNOWN) {
+            if (! empty($op->type) && $op->type->type !== Type::TYPE_UNKNOWN) {
                 $resolved[$op] = $op->type;
             } elseif ($op instanceof Operand\BoundVariable && $op->scope === Operand\BoundVariable::SCOPE_OBJECT) {
                 $resolved[$op] = $op->type = Type::fromDecl($op->extra->value);
@@ -66,22 +69,22 @@ class TypeReconstructor {
 
     /**
      * @param Type[] $types
-     *
-     * @return Type
      */
-    protected function computeMergedType(array $types) {
+    protected function computeMergedType(array $types): Type
+    {
         if (count($types) === 1) {
             return $types[0];
         }
         $same = null;
         foreach ($types as $key => $type) {
-            if (!$type instanceof Type) {
+            if (! $type instanceof Type) {
                 var_dump($types);
-                throw new \RuntimeException("Invalid type found");
+
+                throw new \RuntimeException('Invalid type found');
             }
-            if (is_null($same)) {
+            if (null === $same) {
                 $same = $type;
-            } elseif ($same && !$same->equals($type)) {
+            } elseif ($same && ! $same->equals($type)) {
                 $same = false;
             }
             if ($type->type === Type::TYPE_UNKNOWN) {
@@ -91,16 +94,18 @@ class TypeReconstructor {
         if ($same) {
             return $same;
         }
+
         return (new Type(Type::TYPE_UNION, $types))->simplify();
     }
 
-    protected function resolveVar(Operand $var, SplObjectStorage $resolved) {
+    protected function resolveVar(Operand $var, SplObjectStorage $resolved)
+    {
         $types = [];
         foreach ($var->ops as $prev) {
             $type = $this->resolveVarOp($var, $prev, $resolved);
             if ($type) {
-                if (!is_array($type)) {
-                    throw new \LogicException("Handler for " . get_class($prev) . " returned a non-array");
+                if (! is_array($type)) {
+                    throw new \LogicException('Handler for '.get_class($prev).' returned a non-array');
                 }
                 foreach ($type as $t) {
                     assert($t instanceof Type);
@@ -113,11 +118,13 @@ class TypeReconstructor {
         if (empty($types)) {
             return false;
         }
+
         return $this->computeMergedType($types);
     }
 
-    protected function resolveVarOp(Operand $var, Op $op, SplObjectStorage $resolved) {
-        $method = 'resolveOp_' . $op->getType();
+    protected function resolveVarOp(Operand $var, Op $op, SplObjectStorage $resolved)
+    {
+        $method = 'resolveOp_'.$op->getType();
         if (method_exists($this, $method)) {
             return call_user_func([$this, $method], $var, $op, $resolved);
         }
@@ -150,6 +157,7 @@ class TypeReconstructor {
                             return [Type::int()];
                     }
                 }
+
                 return false;
             case 'Expr_BitwiseNot':
                 if ($resolved->contains($op->expr)) {
@@ -160,6 +168,7 @@ class TypeReconstructor {
                             return [Type::int()];
                     }
                 }
+
                 return false;
             case 'Expr_BinaryOp_Div':
             case 'Expr_BinaryOp_Plus':
@@ -178,12 +187,15 @@ class TypeReconstructor {
                             if ($sub) {
                                 return [new Type(Type::TYPE_ARRAY, [$sub])];
                             }
+
                             return [new Type(Type::TYPE_ARRAY)];
                         default:
                             return [Type::mixed()];
+
                             throw new \RuntimeException("Math op on unknown types {$resolved[$op->left]} + {$resolved[$op->right]}");
                     }
                 }
+
                 return false;
             case 'Expr_BinaryOp_Concat':
             case 'Expr_Cast_String':
@@ -205,8 +217,10 @@ class TypeReconstructor {
                         case Type::TYPE_DOUBLE:
                             return [$resolved[$op->expr]];
                     }
+
                     return [Type::numeric()];
                 }
+
                 return false;
             case 'Expr_Eval':
                 return false;
@@ -215,6 +229,7 @@ class TypeReconstructor {
                     // TODO: implement this as well
                     return false;
                 }
+
                 return false;
             case 'Expr_Exit':
             case 'Iterator_Reset':
@@ -226,8 +241,10 @@ class TypeReconstructor {
                     if ($resolved[$op->var]->subTypes) {
                         return $resolved[$op->var]->subTypes;
                     }
+
                     return false;
                 }
+
                 return false;
             case 'Expr_StaticCall':
                 return $this->resolveMethodCall($op->class, $op->name, $op, $resolved);
@@ -238,13 +255,15 @@ class TypeReconstructor {
                 // TODO: we may be able to determine these...
                 return false;
         }
-        throw new \LogicException("Unknown variable op found: " . $op->getType());
+
+        throw new \LogicException('Unknown variable op found: '.$op->getType());
     }
 
-    protected function resolveOp_Expr_Array(Operand $var, Op\Expr\Array_ $op, SplObjectStorage $resolved) {
+    protected function resolveOp_Expr_Array(Operand $var, Op\Expr\Array_ $op, SplObjectStorage $resolved)
+    {
         $types = [];
         foreach ($op->values as $value) {
-            if (!isset($resolved[$value])) {
+            if (! isset($resolved[$value])) {
                 return false;
             }
             $types[] = $resolved[$value];
@@ -256,15 +275,18 @@ class TypeReconstructor {
         if ($r) {
             return [new Type(Type::TYPE_ARRAY, [$r])];
         }
+
         return [new Type(Type::TYPE_ARRAY)];
     }
 
-    protected function resolveOp_Expr_Cast_Array(Operand $var, Op\Expr\Cast\Array_ $op, SplObjectStorage $resolved) {
+    protected function resolveOp_Expr_Cast_Array(Operand $var, Op\Expr\Cast\Array_ $op, SplObjectStorage $resolved)
+    {
         // Todo: determine subtypes better
         return [new Type(Type::TYPE_ARRAY)];
     }
 
-    protected function resolveOp_Expr_ArrayDimFetch(Operand $var, Op\Expr\ArrayDimFetch $op, SplObjectStorage $resolved) {
+    protected function resolveOp_Expr_ArrayDimFetch(Operand $var, Op\Expr\ArrayDimFetch $op, SplObjectStorage $resolved)
+    {
         if ($resolved->contains($op->var)) {
             // Todo: determine subtypes better
             $type = $resolved[$op->var];
@@ -274,47 +296,60 @@ class TypeReconstructor {
             if ($type->type === Type::TYPE_STRING) {
                 return [$type];
             }
+
             return [Type::mixed()];
         }
+
         return false;
     }
 
-    protected function resolveOp_Expr_Assign(Operand $var, Op\Expr\Assign $op, SplObjectStorage $resolved) {
+    protected function resolveOp_Expr_Assign(Operand $var, Op\Expr\Assign $op, SplObjectStorage $resolved)
+    {
         if ($resolved->contains($op->expr)) {
             return [$resolved[$op->expr]];
         }
+
         return false;
     }
 
-    protected function resolveOp_Expr_AssignRef(Operand $var, Op\Expr\AssignRef $op, SplObjectStorage $resolved) {
+    protected function resolveOp_Expr_AssignRef(Operand $var, Op\Expr\AssignRef $op, SplObjectStorage $resolved)
+    {
         if ($resolved->contains($op->expr)) {
             return [$resolved[$op->expr]];
         }
+
         return false;
     }
 
-    protected function resolveOp_Expr_Cast_Object(Operand $var, Op\Expr\Cast\Object_ $op, SplObjectStorage $resolved) {
+    protected function resolveOp_Expr_Cast_Object(Operand $var, Op\Expr\Cast\Object_ $op, SplObjectStorage $resolved)
+    {
         if ($resolved->contains($op->expr)) {
             if ($resolved[$op->expr]->type->resolves(Type::object())) {
                 return [$resolved[$op->expr]];
             }
+
             return [new Type(Type::TYPE_OBJECT, [], 'stdClass')];
         }
+
         return false;
     }
-     
-    protected function resolveOp_Expr_Clone(Operand $var, Op\Expr\Clone_ $op, SplObjectStorage $resolved) {
+
+    protected function resolveOp_Expr_Clone(Operand $var, Op\Expr\Clone_ $op, SplObjectStorage $resolved)
+    {
         if ($resolved->contains($op->expr)) {
             return [$resolved[$op->expr]];
         }
+
         return false;
     }
 
-    protected function resolveOp_Expr_Closure(Operand $var, Op\Expr\Closure $op, SplObjectStorage $resolved) {
-        return [new Type(Type::TYPE_OBJECT, [], "Closure")];
+    protected function resolveOp_Expr_Closure(Operand $var, Op\Expr\Closure $op, SplObjectStorage $resolved)
+    {
+        return [new Type(Type::TYPE_OBJECT, [], 'Closure')];
     }
 
-    protected function resolveOp_Expr_FuncCall(Operand $var, Op\Expr\FuncCall $op, SplObjectStorage $resolved) {
+    protected function resolveOp_Expr_FuncCall(Operand $var, Op\Expr\FuncCall $op, SplObjectStorage $resolved)
+    {
         if ($op->name instanceof Operand\Literal) {
             $name = strtolower($op->name->value);
             if (isset($this->state->functionLookup[$name])) {
@@ -324,38 +359,42 @@ class TypeReconstructor {
                         $result[] = Type::fromDecl($func->returnType->value);
                     } else {
                         // Check doc comment
-                        $result[] = Type::extractTypeFromComment("return", $func->getAttribute('doccomment'));
+                        $result[] = Type::extractTypeFromComment('return', $func->getAttribute('doccomment'));
                     }
                 }
+
                 return $result;
-            } else {
-                if (isset($this->state->internalTypeInfo->functions[$name])) {
-                    $type = $this->state->internalTypeInfo->functions[$name];
-                    if (empty($type['return'])) {
-                        return false;
-                    }
-                    return [Type::fromDecl($type['return'])];
+            }
+            if (isset($this->state->internalTypeInfo->functions[$name])) {
+                $type = $this->state->internalTypeInfo->functions[$name];
+                if (empty($type['return'])) {
+                    return false;
                 }
+
+                return [Type::fromDecl($type['return'])];
             }
         }
         // we can't resolve the function
         return false;
     }
 
-    protected function resolveOp_Expr_New(Operand $var, Op\Expr\New_ $op, SplObjectStorage $resolved) {
+    protected function resolveOp_Expr_New(Operand $var, Op\Expr\New_ $op, SplObjectStorage $resolved)
+    {
         $type = $this->getClassType($op->class, $resolved);
         if ($type) {
             return [$type];
         }
+
         return [Type::object()];
     }
 
-    protected function resolveOp_Expr_Param(Operand $var, Op\Expr\Param $op, SplObjectStorage $resolved) {
+    protected function resolveOp_Expr_Param(Operand $var, Op\Expr\Param $op, SplObjectStorage $resolved)
+    {
         // $docType = Type::extractTypeFromComment("param", $op->function->getAttribute('doccomment'), $op->name->value);
         if ($op->type) {
             $type = Type::fromDecl($op->type->value);
             if ($op->defaultVar) {
-                if ($op->defaultBlock->children[0]->getType() === "Expr_ConstFetch" && strtolower($op->defaultBlock->children[0]->name->value) === "null") {
+                if ($op->defaultBlock->children[0]->getType() === 'Expr_ConstFetch' && strtolower($op->defaultBlock->children[0]->name->value) === 'null') {
                     $type = (new Type(Type::TYPE_UNION, [$type, Type::null()]))->simplify();
                 }
             }
@@ -365,16 +404,19 @@ class TypeReconstructor {
             // }
             return [$type];
         }
+
         return [Type::mixed()];
         //return [$docType];
     }
 
-    protected function resolveOp_Expr_StaticPropertyFetch(Operand $var, Op $op, SplObjectStorage $resolved) {
+    protected function resolveOp_Expr_StaticPropertyFetch(Operand $var, Op $op, SplObjectStorage $resolved)
+    {
         return $this->resolveOp_Expr_PropertyFetch($var, $op, $resolved);
     }
 
-    protected function resolveOp_Expr_PropertyFetch(Operand $var, Op $op, SplObjectStorage $resolved) {
-        if (!$op->name instanceof Operand\Literal) {
+    protected function resolveOp_Expr_PropertyFetch(Operand $var, Op $op, SplObjectStorage $resolved)
+    {
+        if (! $op->name instanceof Operand\Literal) {
             // variable property fetch
             return [Type::mixed()];
         }
@@ -387,18 +429,22 @@ class TypeReconstructor {
         if ($objType) {
             return $this->resolveProperty($objType, $propName);
         }
+
         return false;
     }
 
-    protected function resolveOp_Expr_Assertion(Operand $var, Op $op, SplObjectStorage $resolved) {
+    protected function resolveOp_Expr_Assertion(Operand $var, Op $op, SplObjectStorage $resolved)
+    {
         $tmp = $this->processAssertion($op->assertion, $op->expr, $resolved);
         if ($tmp) {
             return [$tmp];
         }
+
         return false;
     }
 
-    protected function resolveOp_Expr_ConstFetch(Operand $var, Op\Expr\ConstFetch $op, SplObjectStorage $resolved) {
+    protected function resolveOp_Expr_ConstFetch(Operand $var, Op\Expr\ConstFetch $op, SplObjectStorage $resolved)
+    {
         if ($op->name instanceof Operand\Literal) {
             $constant = strtolower($op->name->value);
             switch ($constant) {
@@ -411,35 +457,43 @@ class TypeReconstructor {
                     if (isset($this->state->constants[$op->name->value])) {
                         $return = [];
                         foreach ($this->state->constants[$op->name->value] as $value) {
-                            if (!$resolved->contains($value->value)) {
+                            if (! $resolved->contains($value->value)) {
                                 return false;
                             }
                             $return[] = $resolved[$value->value];
                         }
+
                         return $return;
                     }
             }
         }
+
         return false;
     }
 
-    protected function resolveOp_Expr_ClassConstFetch(Operand $var, Op\Expr\ClassConstFetch $op, SplObjectStorage $resolved) {
+    protected function resolveOp_Expr_ClassConstFetch(Operand $var, Op\Expr\ClassConstFetch $op, SplObjectStorage $resolved)
+    {
         $classes = [];
         if ($op->class instanceof Operand\Literal) {
             $class = strtolower($op->class->value);
+
             return $this->resolveClassConstant($class, $op, $resolved);
-        } elseif ($resolved->contains($op->class)) {
+        }
+        if ($resolved->contains($op->class)) {
             $type = $resolved[$op->class];
             if ($type->type !== Type::TYPE_OBJECT || empty($type->userType)) {
                 // give up
                 return false;
             }
+
             return $this->resolveClassConstant(strtolower($type->userType), $op, $resolved);
         }
+
         return false;
     }
 
-    protected function resolveOp_Phi(Operand $var, Op\Phi $op, SplObjectStorage $resolved) {
+    protected function resolveOp_Phi(Operand $var, Op\Phi $op, SplObjectStorage $resolved)
+    {
         $types = [];
         $resolveFully = true;
         foreach ($op->vars as $v) {
@@ -460,10 +514,12 @@ class TypeReconstructor {
             // leave on unresolved list to try again next round
             $resolved[$var] = $type;
         }
+
         return false;
     }
 
-    protected function findMethod($class, $name) {
+    protected function findMethod($class, $name)
+    {
         foreach ($class->stmts->children as $stmt) {
             if ($stmt instanceof Op\Stmt\ClassMethod) {
                 if (strtolower($stmt->func->name) === $name) {
@@ -474,10 +530,10 @@ class TypeReconstructor {
         if ($name !== '__call') {
             return $this->findMethod($class, '__call');
         }
-        return null;
     }
 
-    protected function findProperty($class, $name) {
+    protected function findProperty($class, $name)
+    {
         foreach ($class->stmts->children as $stmt) {
             if ($stmt instanceof Op\Stmt\Property) {
                 if ($stmt->name->value === $name) {
@@ -485,21 +541,22 @@ class TypeReconstructor {
                 }
             }
         }
-        return null;
     }
 
-    protected function resolveAllProperties() {
+    protected function resolveAllProperties()
+    {
         foreach ($this->state->classes as $class) {
             foreach ($class->stmts->children as $stmt) {
                 if ($stmt instanceof Op\Stmt\Property) {
-                    $stmt->type = Type::extractTypeFromComment("var", $stmt->getAttribute('doccomment'));
+                    $stmt->type = Type::extractTypeFromComment('var', $stmt->getAttribute('doccomment'));
                 }
             }
         }
     }
 
-    protected function resolveClassConstant($class, $op, SplObjectStorage $resolved) {
-        $try = $class . '::' . $op->name->value;
+    protected function resolveClassConstant($class, $op, SplObjectStorage $resolved)
+    {
+        $try = $class.'::'.$op->name->value;
         if (isset($this->state->constants[$try])) {
             $types = [];
             foreach ($this->state->constants[$try] as $const) {
@@ -510,15 +567,16 @@ class TypeReconstructor {
                     return false;
                 }
             }
+
             return $types;
         }
-        if (!isset($this->state->classResolvedBy[$class])) {
+        if (! isset($this->state->classResolvedBy[$class])) {
             // can't find classes
             return false;
         }
         $types = [];
         foreach ($this->state->classResolves[$class] as $name => $_) {
-            $try = $name . '::' . $op->name->value;
+            $try = $name.'::'.$op->name->value;
             if (isset($this->state->constants[$try])) {
                 foreach ($this->state->constants[$try] as $const) {
                     if ($resolved->contains($const->value)) {
@@ -533,115 +591,21 @@ class TypeReconstructor {
         if (empty($types)) {
             return false;
         }
+
         return $types;
     }
 
-    /**
-     * @param Type   $objType
-     * @param string $propName
-     *
-     * @return Type[]|false
-     */
-    private function resolveProperty(Type $objType, $propName) {
-        if ($objType->type === Type::TYPE_OBJECT) {
-            $types = [];
-            $ut = strtolower($objType->userType);
-            if (!isset($this->state->classResolves[$ut])) {
-                // unknown type
-                return false;
-            }
-            foreach ($this->state->classResolves[$ut] as $class) {
-                // Lookup property on class
-                $property = $this->findProperty($class, $propName);
-                if ($property) {
-                    if ($property->type) {
-                        $types[] = $property->type;
-                    } else {
-                        echo "Property found to be untyped: $propName\n";
-                        // untyped property
-                        return false;
-                    }
-                }
-            }
-            if ($types) {
-                return $types;
-            }
-        }
-        return false;
-    }
-
-    private function resolveMethodCall($class, $name, Op $op, SplObjectStorage $resolved) {
-        if (!$name instanceof Operand\Literal) {
-            // Variable Method Call
-            return false;
-        }
-        $name = strtolower($name->value);
-        if ($resolved->contains($class)) {
-            $userType = '';
-            if ($resolved[$class]->type === Type::TYPE_STRING) {
-                if (!$class instanceof Operand\Literal) {
-                    // variable class name, for now just return object
-                    return [Type::mixed()];
-                }
-                $userType = $class->value;
-            } elseif ($resolved[$class]->type !== Type::TYPE_OBJECT) {
-                return false;
-            } else {
-                $userType = $resolved[$class]->userType;
-            }
-            $types = [];
-            $className = strtolower($userType);
-            if (!isset($this->state->classResolves[$className])) {
-                if (isset($this->state->internalTypeInfo->methods[$className])) {
-                    $types = [];
-                    foreach ($this->state->internalTypeInfo->methods[$className]['extends'] as $child) {
-                        if (isset($this->state->internalTypeInfo->methods[$child]['methods'][$name])) {
-                            $method = $this->state->internalTypeInfo->methods[$child]['methods'][$name];
-                            if ($method['return']) {
-                                $types[] = Type::fromDecl($method['return']);
-                            }
-                        }
-                    }
-                    if (!empty($types)) {
-                        return $types;
-                    }
-                }
-                return false;
-            }
-            foreach ($this->state->classResolves[$className] as $class) {
-                $method = $this->findMethod($class, $name);
-                if (!$method) {
-                    continue;
-                }
-                $doc = Type::extractTypeFromComment("return", $method->getAttribute('doccomment'));
-
-                if (!isset($method->func->returnType)) {
-                    $types[] = $doc;
-                } else {
-                    $decl = Type::fromDecl($method->func->returnType->value);
-                    if ($this->state->resolver->resolves($doc, $decl)) {
-                        // doc is a subset
-                        $types[] = $doc;
-                    } else {
-                        $types[] = $decl;
-                    }
-                }
-            }
-            if (!empty($types)) {
-                return $types;
-            }
-            return false;
-        }
-        return false;
-    }
-
-    protected function getClassType(Operand $var, SplObjectStorage $resolved) {
+    protected function getClassType(Operand $var, SplObjectStorage $resolved)
+    {
         if ($var instanceof Operand\Literal) {
             return new Type(Type::TYPE_OBJECT, [], $var->value);
-        } elseif ($var instanceof Operand\BoundVariable && $var->scope === Operand\BoundVariable::SCOPE_OBJECT) {
+        }
+        if ($var instanceof Operand\BoundVariable && $var->scope === Operand\BoundVariable::SCOPE_OBJECT) {
             assert($var->extra instanceof Operand\Literal);
+
             return Type::fromDecl($var->extra->value);
-        } elseif ($resolved->contains($var)) {
+        }
+        if ($resolved->contains($var)) {
             $type = $resolved[$var];
             if ($type->type === Type::TYPE_OBJECT) {
                 return $type;
@@ -651,7 +615,8 @@ class TypeReconstructor {
         return false;
     }
 
-    protected function processAssertion(Assertion $assertion, Operand $source, SplObjectStorage $resolved) {
+    protected function processAssertion(Assertion $assertion, Operand $source, SplObjectStorage $resolved)
+    {
         if ($assertion instanceof Assertion\TypeAssertion) {
             $tmp = $this->processTypeAssertion($assertion, $source, $resolved);
             if ($tmp) {
@@ -668,10 +633,12 @@ class TypeReconstructor {
                 return Type::mixed()->removeType($op);
             }
         }
+
         return false;
     }
 
-    protected function processTypeAssertion(Assertion\TypeAssertion $assertion, Operand $source, SplObjectStorage $resolved) {
+    protected function processTypeAssertion(Assertion\TypeAssertion $assertion, Operand $source, SplObjectStorage $resolved)
+    {
         if ($assertion->value instanceof Operand) {
             if ($assertion->value instanceof Operand\Literal) {
                 return Type::fromDecl($assertion->value->value);
@@ -679,17 +646,123 @@ class TypeReconstructor {
             if (isset($resolved[$assertion->value])) {
                 return $resolved[$assertion->value];
             }
+
             return false;
         }
         $subTypes = [];
         foreach ($assertion->value as $sub) {
             $subTypes[] = $subType = $this->processTypeAssertion($sub, $source, $resolved);
-            if (!$subType) {
+            if (! $subType) {
                 // Not fully resolved yet
                 return false;
             }
         }
         $type = $assertion->mode === Assertion::MODE_UNION ? Type::TYPE_UNION : Type::TYPE_INTERSECTION;
+
         return new Type($type, $subTypes);
+    }
+
+    /**
+     * @param string $propName
+     *
+     * @return Type[]|false
+     */
+    private function resolveProperty(Type $objType, $propName)
+    {
+        if ($objType->type === Type::TYPE_OBJECT) {
+            $types = [];
+            $ut = strtolower($objType->userType);
+            if (! isset($this->state->classResolves[$ut])) {
+                // unknown type
+                return false;
+            }
+            foreach ($this->state->classResolves[$ut] as $class) {
+                // Lookup property on class
+                $property = $this->findProperty($class, $propName);
+                if ($property) {
+                    if ($property->type) {
+                        $types[] = $property->type;
+                    } else {
+                        echo "Property found to be untyped: ${propName}\n";
+                        // untyped property
+                        return false;
+                    }
+                }
+            }
+            if ($types) {
+                return $types;
+            }
+        }
+
+        return false;
+    }
+
+    private function resolveMethodCall($class, $name, Op $op, SplObjectStorage $resolved)
+    {
+        if (! $name instanceof Operand\Literal) {
+            // Variable Method Call
+            return false;
+        }
+        $name = strtolower($name->value);
+        if ($resolved->contains($class)) {
+            $userType = '';
+            if ($resolved[$class]->type === Type::TYPE_STRING) {
+                if (! $class instanceof Operand\Literal) {
+                    // variable class name, for now just return object
+                    return [Type::mixed()];
+                }
+                $userType = $class->value;
+            } elseif ($resolved[$class]->type !== Type::TYPE_OBJECT) {
+                return false;
+            } else {
+                $userType = $resolved[$class]->userType;
+            }
+            $types = [];
+            $className = strtolower($userType);
+            if (! isset($this->state->classResolves[$className])) {
+                if (isset($this->state->internalTypeInfo->methods[$className])) {
+                    $types = [];
+                    foreach ($this->state->internalTypeInfo->methods[$className]['extends'] as $child) {
+                        if (isset($this->state->internalTypeInfo->methods[$child]['methods'][$name])) {
+                            $method = $this->state->internalTypeInfo->methods[$child]['methods'][$name];
+                            if ($method['return']) {
+                                $types[] = Type::fromDecl($method['return']);
+                            }
+                        }
+                    }
+                    if (! empty($types)) {
+                        return $types;
+                    }
+                }
+
+                return false;
+            }
+            foreach ($this->state->classResolves[$className] as $class) {
+                $method = $this->findMethod($class, $name);
+                if (! $method) {
+                    continue;
+                }
+                $doc = Type::extractTypeFromComment('return', $method->getAttribute('doccomment'));
+
+                if (! isset($method->func->returnType)) {
+                    $types[] = $doc;
+                } else {
+                    $decl = Type::fromDecl($method->func->returnType->value);
+                    if ($this->state->resolver->resolves($doc, $decl)) {
+                        // doc is a subset
+                        $types[] = $doc;
+                    } else {
+                        $types[] = $decl;
+                    }
+                }
+            }
+            if (! empty($types)) {
+                return $types;
+            }
+
+            return false;
+        }
+
+        return false;
     }
 }

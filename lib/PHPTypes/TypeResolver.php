@@ -1,7 +1,9 @@
 <?php
 
-/*
- * This file is part of PHP-Types, a type reconstruction lib for PHP
+declare(strict_types=1);
+
+/**
+ * This file is part of PHP-Types, a Type Resolver implementation for PHP
  *
  * @copyright 2015 Anthony Ferrara. All rights reserved
  * @license MIT See LICENSE at the root of the project for more info
@@ -9,18 +11,20 @@
 
 namespace PHPTypes;
 
-class TypeResolver {
-    
+class TypeResolver
+{
     protected $state;
 
     protected $callableUnion;
 
-    public function __construct(State $state) {
+    public function __construct(State $state)
+    {
         $this->state = $state;
-        $this->callableUnion = Type::fromDecl("string|array|object");
+        $this->callableUnion = Type::fromDecl('string|array|object');
     }
 
-    public function resolves(Type $a, Type $b) {
+    public function resolves(Type $a, Type $b)
+    {
         if ($a->equals($b)) {
             return true;
         }
@@ -34,14 +38,15 @@ class TypeResolver {
             return true;
         }
         if ($a->type === Type::TYPE_ARRAY && $b->type === Type::TYPE_ARRAY) {
-            if (!$b->subTypes) {
+            if (! $b->subTypes) {
                 return true;
             }
-            if (!$a->subTypes) {
+            if (! $a->subTypes) {
                 // We need a specific array
                 return false;
             }
-            return ($this->resolves($a->subTypes[0], $b->subTypes[0]));
+
+            return $this->resolves($a->subTypes[0], $b->subTypes[0]);
         }
         if ($a->type === Type::TYPE_UNION) {
             foreach ($a->subTypes as $st) {
@@ -50,6 +55,7 @@ class TypeResolver {
                     return false;
                 }
             }
+
             return true;
         }
         if ($a->type === Type::TYPE_INTERSECTION) {
@@ -59,6 +65,7 @@ class TypeResolver {
                     return true;
                 }
             }
+
             return false;
         }
         if ($b->type === Type::TYPE_UNION) {
@@ -68,21 +75,25 @@ class TypeResolver {
                     return true;
                 }
             }
+
             return false;
         }
         if ($b->type === Type::TYPE_INTERSECTION) {
             foreach ($b->subTypes as $st) {
-                if (!$this->resolves($a, $st)) {
+                if (! $this->resolves($a, $st)) {
                     // At least one resolves it
                     return false;
                 }
             }
+
             return true;
         }
+
         return false;
     }
 
-    private function checkUserTypes($a, $b) {
+    private function checkUserTypes($a, $b)
+    {
         $a = strtolower($a);
         $b = strtolower($b);
         if (isset($this->state->classResolves[$b][$a])) {
@@ -91,5 +102,4 @@ class TypeResolver {
         // TODO: take care of internal types
         return false;
     }
-
 }
