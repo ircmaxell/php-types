@@ -12,29 +12,35 @@ class A {
 -----
 Block#1
     Stmt_Class
+        name: LITERAL<string>('A')
         stmts: Block#2
+    Terminal_Return
 
 Block#2
     Stmt_ClassMethod<foo>
-        Param[0]: Var<string>#1<$abc>
-        stmts: Block#3
     Stmt_ClassMethod<bar>
-        Param[0]: Var<float>#3<$def>
-        stmts: Block#4
 
-Block#3
+Function A::foo():
+Block#1
+    Expr_Param
+        name: LITERAL('abc')
+        result: Var<string>#1<$abc>
     Expr_MethodCall
         var: this<<A>$this>
         name: LITERAL<string>('bar')
-        args: Var<string>#1<$abc>
-        result: Var<int>#7
+        args[0]: Var<string>#1<$abc>
+        result: Var<int>#2
     Terminal_Return
-        expr: Var<int>#7
+        expr: Var<int>#2
 
-Block#4
+Function A::bar():
+Block#1
+    Expr_Param
+        name: LITERAL('def')
+        result: Var<float>#1<$def>
     Expr_FuncCall
         name: LITERAL<string>('floor')
-        args: Var<float>#3<$def>
-        result: Var<int>#9
+        args[0]: Var<float>#1<$def>
+        result: Var<int>#2
     Terminal_Return
-        expr: Var<int>#9
+        expr: Var<int>#2

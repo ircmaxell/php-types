@@ -7,8 +7,9 @@ Block#1
     Expr_Assign
         var: Var<int>#1<$x>
         expr: LITERAL<int>(1)
-        result: Var<int>#4
+        result: Var<int>#2
     Expr_Assign
-        var: Var<int>#5<$y>
+        var: Var<int>#3<$y>
         expr: LITERAL<int>(2)
-        result: Var<int>#8
+        result: Var<int>#4
+    Terminal_Return

@@ -6,7 +6,8 @@
 Block#1
     Expr_BitwiseNot
         expr: LITERAL<int>(1)
-        result: Var<int>#2
+        result: Var<int>#1
     Expr_BitwiseNot
         expr: LITERAL<string>('')
-        result: Var<string>#4
+        result: Var<string>#2
+    Terminal_Return

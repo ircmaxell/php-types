@@ -11,6 +11,7 @@ namespace PHPTypes;
 
 use PHPCfg\Parser;
 use PHPCfg\Printer;
+use PHPCfg\Script;
 use PHPCfg\Traverser;
 use PHPCfg\Visitor;
 use PhpParser;
@@ -23,20 +24,20 @@ class ReconstructorTest extends \PHPUnit_Framework_TestCase {
         $astTraverser = new PhpParser\NodeTraverser;
         $astTraverser->addVisitor(new PhpParser\NodeVisitor\NameResolver);
         $parser = new Parser((new ParserFactory)->create(ParserFactory::PREFER_PHP7), $astTraverser);
-        $block = $parser->parse($code, 'foo.php');
+        $script = $parser->parse($code, 'foo.php');
 
         $traverser = new Traverser();
         $traverser->addVisitor(new Visitor\Simplifier());
-        $traverser->traverse($block);
+        $traverser->traverse($script);
 
         $reconstructor = new TypeReconstructor;
-        $state = new State([$block]);
+        $state = new State($script);
         $reconstructor->resolve($state);
 
         $printer = new Printer\Text();
         $this->assertEquals(
             $this->canonicalize($expectedDump),
-            $this->canonicalize($printer->printCfg([$block]))
+            $this->canonicalize($printer->printScript($script))
         );
     }
 
