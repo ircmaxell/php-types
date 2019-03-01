@@ -1,0 +1,28 @@
+<?php
+
+function foo(string $bar): string {
+    return $bar;
+}
+
+$baz = foo("test");
+-----
+Block#1
+    Stmt_Function<foo>
+    Expr_FuncCall
+        name: LITERAL<inferred:string>('foo')
+        args[0]: LITERAL<inferred:string>('test')
+        result: Var<inferred:string>#1
+    Expr_Assign
+        var: Var<inferred:string>#2<$baz>
+        expr: Var<inferred:string>#1
+        result: Var<inferred:string>#3
+    Terminal_Return
+
+Function foo(): string
+Block#1
+    Expr_Param
+        declaredType: string
+        name: LITERAL('bar')
+        result: Var<inferred:string>#1<$bar>
+    Terminal_Return
+        expr: Var<inferred:string>#1<$bar>

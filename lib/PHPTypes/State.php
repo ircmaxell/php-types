@@ -164,12 +164,11 @@ class State
     {
         $lookup = [];
         foreach ($functions as $function) {
-            assert($function->name instanceof Operand\Literal);
-            $name = strtolower($function->name->value);
+            $name = strtolower($function->func->name);
             if (! isset($lookup[$name])) {
                 $lookup[$name] = [];
             }
-            $lookup[$name][] = $function;
+            $lookup[$name][] = $function->func;
         }
 
         return $lookup;

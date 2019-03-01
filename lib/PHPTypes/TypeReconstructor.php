@@ -356,7 +356,7 @@ class TypeReconstructor
                 $result = [];
                 foreach ($this->state->functionLookup[$name] as $func) {
                     if ($func->returnType) {
-                        $result[] = Type::fromDecl($func->returnType->value);
+                        $result[] = Type::fromTypeDecl($func->returnType);
                     } else {
                         // Check doc comment
                         $result[] = Type::extractTypeFromComment('return', $func->getAttribute('doccomment'));

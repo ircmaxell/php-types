@@ -11,6 +11,8 @@ declare(strict_types=1);
 
 namespace PHPTypes;
 
+use PHPCfg\Op\Type as CfgType;
+
 class Type
 {
     const TYPE_UNKNOWN = -1;
@@ -283,6 +285,13 @@ class Type
         }
         // TODO: compute redundant unions
         return new self($this->type, $new);
+    }
+
+    public static function fromTypeDecl(CfgType $decl): self {
+        if ($decl instanceof CfgType\Literal) {
+            return self::fromDecl($decl->name);
+        }
+        throw new \LogicException("Unsupported declaration type: " . get_class($decl));
     }
 
     /**
