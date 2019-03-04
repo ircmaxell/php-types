@@ -13,7 +13,6 @@ namespace PHPTypes;
 
 use PHPCfg\Block;
 use PHPCfg\Op;
-use PHPCfg\Operand;
 use PHPCfg\Script;
 use PHPCfg\Traverser;
 use PHPCfg\Visitor;

@@ -1,0 +1,48 @@
+<?php
+
+class Foo {
+    public int $bar = 0;
+}
+
+$foo = new Foo;
+$foo->bar = 2;
+var_dump($foo->bar);
+
+-----
+Block#1
+    Stmt_Class
+        name: LITERAL<inferred:string>('Foo')
+        stmts: Block#2
+    Expr_New
+        class: LITERAL<inferred:string>('Foo')
+        result: Var<inferred:Foo>#1
+    Expr_Assign
+        var: Var<inferred:Foo>#2<$foo>
+        expr: Var<inferred:Foo>#1
+        result: Var<inferred:Foo>#3
+    Expr_PropertyFetch
+        var: Var<inferred:Foo>#2<$foo>
+        name: LITERAL<inferred:string>('bar')
+        result: Var<inferred:int>#4
+    Expr_Assign
+        var: Var<inferred:int>#4
+        expr: LITERAL<inferred:int>(2)
+        result: Var<inferred:int>#5
+    Expr_PropertyFetch
+        var: Var<inferred:Foo>#2<$foo>
+        name: LITERAL<inferred:string>('bar')
+        result: Var<inferred:int>#6
+    Expr_FuncCall
+        name: LITERAL<inferred:string>('var_dump')
+        args[0]: Var<inferred:int>#6
+        result: Var<inferred:unknown>#7
+    Terminal_Return
+
+Block#2
+    Stmt_Property
+        declaredType: int
+        name: LITERAL<inferred:string>('bar')
+        defaultVar: LITERAL<inferred:int>(0)
+        defaultBlock: Block#3
+
+Block#3

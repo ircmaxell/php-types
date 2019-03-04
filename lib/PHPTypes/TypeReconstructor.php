@@ -678,12 +678,10 @@ class TypeReconstructor
                 // Lookup property on class
                 $property = $this->findProperty($class, $propName);
                 if ($property) {
-                    if ($property->type) {
+                    if ($property->declaredType instanceof Op\Type\Mixed && $property->type) {
                         $types[] = $property->type;
                     } else {
-                        echo "Property found to be untyped: ${propName}\n";
-                        // untyped property
-                        return false;
+                        $types[] = $this->resolveOpType($property->declaredType);
                     }
                 }
             }
@@ -693,6 +691,28 @@ class TypeReconstructor
         }
 
         return false;
+    }
+
+    private function resolveOpType(Op\Type $type): Type
+    {
+        if ($type instanceof Op\Type\Mixed) {
+            return Type::mixed();
+        }
+        if ($type instanceof Op\Type\Nullable) {
+            (new Type(Type::TYPE_UNION, [
+                $this->resolveOpType($type->subtype),
+                new Type(Type::TYPE_NULL),
+            ]))->simplify();
+        } elseif ($type instanceof Op\Type\Void) {
+            return Type::null();
+        } elseif ($type instanceof Op\Type\Reference) {
+            // todo
+            return Type::fromDecl($type->declaration->value);
+        } elseif ($type instanceof Op\Type\Literal) {
+            return Type::fromDecl($type->name);
+        }
+
+        throw new \LogicException('Unknown Op\\Type provided: '.get_class($type));
     }
 
     private function resolveMethodCall($class, $name, Op $op, SplObjectStorage $resolved)

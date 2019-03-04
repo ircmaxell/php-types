@@ -1,0 +1,29 @@
+<?php
+
+function id(int $foo): int {
+    return $foo;
+}
+
+var_dump(id(123));
+
+-----
+Block#1
+    Stmt_Function<id>
+    Expr_FuncCall
+        name: LITERAL<inferred:string>('id')
+        args[0]: LITERAL<inferred:int>(123)
+        result: Var<inferred:int>#1
+    Expr_FuncCall
+        name: LITERAL<inferred:string>('var_dump')
+        args[0]: Var<inferred:int>#1
+        result: Var<inferred:unknown>#2
+    Terminal_Return
+
+Function id(): int
+Block#1
+    Expr_Param
+        declaredType: int
+        name: LITERAL('foo')
+        result: Var<inferred:int>#1<$foo>
+    Terminal_Return
+        expr: Var<inferred:int>#1<$foo>

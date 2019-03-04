@@ -287,11 +287,13 @@ class Type
         return new self($this->type, $new);
     }
 
-    public static function fromTypeDecl(CfgType $decl): self {
+    public static function fromTypeDecl(CfgType $decl): self
+    {
         if ($decl instanceof CfgType\Literal) {
             return self::fromDecl($decl->name);
         }
-        throw new \LogicException("Unsupported declaration type: " . get_class($decl));
+
+        throw new \LogicException('Unsupported declaration type: '.get_class($decl));
     }
 
     /**
