@@ -388,16 +388,9 @@ class TypeReconstructor
         return [Type::object()];
     }
 
-    protected function resolveDeclaredType(Op\Type $type): Type
-    {
-        if ($type instanceof Op\Type\Literal) {
-            return Type::fromDecl($type->name);
-        }
-    }
-
     protected function resolveOp_Expr_Param(Operand $var, Op\Expr\Param $op, SplObjectStorage $resolved)
     {
-        $type = $this->resolveDeclaredType($op->declaredType);
+        $type = $this->resolveOpType($op->declaredType);
         if ($op->defaultVar) {
             if ($op->defaultBlock->children[0]->getType() === 'Expr_ConstFetch' && strtolower($op->defaultBlock->children[0]->name->value) === 'null') {
                 $type = (new Type(Type::TYPE_UNION, [$type, Type::null()]))->simplify();
@@ -546,7 +539,11 @@ class TypeReconstructor
         foreach ($this->state->classes as $class) {
             foreach ($class->stmts->children as $stmt) {
                 if ($stmt instanceof Op\Stmt\Property) {
-                    $stmt->type = Type::extractTypeFromComment('var', $stmt->getAttribute('doccomment'));
+                    if ($stmt->declaredType instanceof Op\Type\Mixed) {
+                        $stmt->type = Type::extractTypeFromComment('var', $stmt->getAttribute('doccomment'));
+                    } else {
+                        $stmt->type = $this->resolveOpType($stmt->declaredType);
+                    }
                 }
             }
         }
@@ -762,7 +759,7 @@ class TypeReconstructor
                 }
                 $doc = Type::extractTypeFromComment('return', $method->getAttribute('doccomment'));
 
-                $decl = $this->resolveDeclaredType($method->func->returnType);
+                $decl = $this->resolveOpType($method->func->returnType);
                 if ($this->state->resolver->resolves($doc, $decl)) {
                     // doc is a subset
                     $types[] = $doc;
