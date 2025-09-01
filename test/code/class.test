@@ -12,35 +12,41 @@ class A {
 -----
 Block#1
     Stmt_Class
-        name: LITERAL<string>('A')
+        name: A
         stmts: Block#2
     Terminal_Return
 
 Block#2
-    Stmt_ClassMethod<foo>
-    Stmt_ClassMethod<bar>
+    Stmt_ClassMethod
+        name: foo
+        flags: public
+    Stmt_ClassMethod
+        name: bar
+        flags: protected
 
-Function A::foo():
+Function 'A::foo': int
 Block#1
     Expr_Param
-        name: LITERAL('abc')
-        result: Var<string>#1<$abc>
+        declaredType: string
+        name: LITERAL<string>('abc')
+        result: TEMP<string>(#1 <VARIABLE($abc)>)
     Expr_MethodCall
-        var: this<<A>$this>
+        var: VARIABLE<A>(this $this)
         name: LITERAL<string>('bar')
-        args[0]: Var<string>#1<$abc>
-        result: Var<int>#2
+        args[0]: TEMP<string>(#1 <VARIABLE($abc)>)
+        result: TEMP<int>(#2)
     Terminal_Return
-        expr: Var<int>#2
+        expr: TEMP<int>(#2)
 
-Function A::bar():
+Function 'A::bar': int
 Block#1
     Expr_Param
-        name: LITERAL('def')
-        result: Var<float>#1<$def>
+        declaredType: float
+        name: LITERAL<string>('def')
+        result: TEMP<float>(#1 <VARIABLE($def)>)
     Expr_FuncCall
         name: LITERAL<string>('floor')
-        args[0]: Var<float>#1<$def>
-        result: Var<int>#2
+        args[0]: TEMP<float>(#1 <VARIABLE($def)>)
+        result: TEMP<int>(#2)
     Terminal_Return
-        expr: Var<int>#2
+        expr: TEMP<int>(#2)

@@ -13,7 +13,7 @@ class InternalArgInfo {
     /**
      * @var string[][]
      */
-    private $info = [
+    private array $info = [
         'abs'                                                       => ['int|float', 'number'=>'int|float'],
         'accelerator_get_configuration'                             => ['array'],
         'accelerator_get_scripts'                                   => ['array'],
@@ -8501,14 +8501,9 @@ class InternalArgInfo {
         'zlib_get_coding_type'                                      => ['string'],
     ];
 
-    /**
-     * @var array
-     */
-    public $functions = [];
-    /**
-     * @var array
-     */
-    public $methods = [];
+    public array $functions = [];
+    
+    public array $methods = [];
 
     public function __construct() {
         // load the typeinfo:
@@ -8530,12 +8525,7 @@ class InternalArgInfo {
         $this->loadReflectables();
     }
 
-    /**
-     * @var array
-     *
-     * @return array
-     */
-    protected function parseInfo(array $info) {
+    protected function parseInfo(array $info): array {
         $return = array_shift($info);
         $params = [];
         foreach ($info as $name => $param) {
@@ -8547,7 +8537,7 @@ class InternalArgInfo {
         ];
     }
 
-    protected function loadReflectables() {
+    protected function loadReflectables(): void {
         $data = array_merge(get_declared_classes(), get_declared_interfaces());
         foreach ($data as $class) {
             $r = new \ReflectionClass($class);

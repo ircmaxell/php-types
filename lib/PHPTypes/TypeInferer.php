@@ -1,7 +1,7 @@
 <?php
 
-/*
- * This file is part of PHP-Types, a type reconstruction lib for PHP
+/**
+ * This file is part of PHP-Types, a Type Inference and resolver enginefor PHP
  *
  * @copyright 2015 Anthony Ferrara. All rights reserved
  * @license MIT See LICENSE at the root of the project for more info
@@ -9,14 +9,18 @@
 
 namespace PHPTypes;
 
+use LogicException;
 use PHPCfg\Op;
 use PHPCfg\Operand;
+use SplObjectStorage;
 
-class TypeInferer {
-    public function infer(array $components) {
+class TypeInferer
+{
+    public function infer(array $components): void
+    {
         $this->components = $components;
-        $resolved = new \SplObjectStorage;
-        $unresolved = new \SplObjectStorage;
+        $resolved = new SplObjectStorage();
+        $unresolved = new SplObjectStorage();
         foreach ($components['variables'] as $op) {
             if (!empty($op->type) && $op->type->type !== Type::TYPE_UNKNOWN && $op->type->type !== Type::TYPE_MIXED) {
                 $resolved[$op] = $op->type;
@@ -63,7 +67,8 @@ class TypeInferer {
         }
     }
 
-    protected function resloveVar(Op $var, \SplObjectStorage $resolved) {
-        var_dump($var);
+    protected function resloveVar(Op $var, SplObjectStorage $resolved)
+    {
+        throw new LogicException("Unresolved");
     }
 }

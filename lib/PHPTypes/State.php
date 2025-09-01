@@ -1,7 +1,7 @@
 <?php
 
-/*
- * This file is part of PHP-Types, a type reconstruction lib for PHP
+/**
+ * This file is part of PHP-Types, a Type Inference and resolver enginefor PHP
  *
  * @copyright 2015 Anthony Ferrara. All rights reserved
  * @license MIT See LICENSE at the root of the project for more info
@@ -11,78 +11,78 @@ namespace PHPTypes;
 
 use PHPCfg\Block;
 use PHPCfg\Op;
-use PHPCfg\Operand;
+use PHPCfg\Script;
 use PHPCfg\Traverser;
 use PHPCfg\Visitor;
-use PHPCfg\Script;
 use SplObjectStorage;
 
-class State {
-    
+class State
+{
     public $script;
 
-    public $blocks = [];
+    public array $blocks = [];
 
     /**
      * @var Op\Stmt\Class[][]
      */
-    public $classMap = [];
+    public array $classMap = [];
 
     /**
      * @var SplObjectStorage
      */
-    public $variables;
-    
+    public SplObjectStorage $variables;
+
     /**
      * @var Op\Terminal\Const_[]
      */
-    public $constants;
-    
+    public array $constants;
+
     /**
      * @var Op\Stmt\Trait_[]
      */
-    public $traits;
-    
+    public array $traits;
+
     /**
      * @var Op\Stmt\Class_[]
      */
-    public $classes;
+    public array $classes;
 
     /**
      * @var Op\Stmt\Interface_[]
      */
-    public $interfaces;
+    public array $interfaces;
 
     /**
      * @var Op\Stmt\Method[]
      */
-    public $methods;
+    public array $methods;
 
     /**
      * @var Op\Stmt\Function_[]
      */
-    public $functions;
+    public array $functions;
 
     /**
      * @var Op\Stmt\Function_[][]
      */
-    public $functionLookup;
+    public array $functionLookup;
 
-    public $internalTypeInfo;
+    public InternalArgInfo $internalTypeInfo;
 
-    public $resolver;
+    public TypeResolver $resolver;
 
-    public $callFinder;
+    public Visitor\CallFinder $callFinder;
 
-    public $classResolves = [];
+    public array $classResolves = [];
 
-    public $classResolvedBy = [];
+    public array $classResolvedBy = [];
 
-    public $methodCalls = [];
+    public array $methodCalls = [];
 
-    public $newCalls = [];
+    public array $newCalls = [];
 
-    public function __construct(Script $script) {
+    public function __construct(Script $script)
+    {
         $this->script = $script;
         foreach ($this->script->functions as $func) {
             if (!is_null($func->cfg)) {
@@ -93,16 +93,17 @@ class State {
             $this->blocks[] = $this->script->main->cfg;
         }
         $this->resolver = new TypeResolver($this);
-        $this->internalTypeInfo = new InternalArgInfo;
+        $this->internalTypeInfo = new InternalArgInfo();
         $this->load();
     }
 
 
-    private function load() {
-        $traverser = new Traverser;
-        $declarations = new Visitor\DeclarationFinder;
-        $calls = new Visitor\CallFinder;
-        $variables = new Visitor\VariableFinder;
+    private function load(): void
+    {
+        $traverser = new Traverser();
+        $declarations = new Visitor\DeclarationFinder();
+        $calls = new Visitor\CallFinder();
+        $variables = new Visitor\VariableFinder();
         $traverser->addVisitor($declarations);
         $traverser->addVisitor($calls);
         $traverser->addVisitor($variables);
@@ -123,11 +124,11 @@ class State {
         $this->computeTypeMatrix();
     }
 
-    private function buildFunctionLookup(array $functions) {
+    private function buildFunctionLookup(array $functions): array
+    {
         $lookup = [];
         foreach ($functions as $function) {
-            assert($function->name instanceof Operand\Literal);
-            $name = strtolower($function->name->value);
+            $name = strtolower($function->func->name);
             if (!isset($lookup[$name])) {
                 $lookup[$name] = [];
             }
@@ -136,7 +137,8 @@ class State {
         return $lookup;
     }
 
-    private function computeTypeMatrix() {
+    private function computeTypeMatrix(): void
+    {
         // TODO: This is dirty, and needs cleaning
         // A extends B
         $map = []; // a => [a, b], b => [b]
@@ -144,7 +146,7 @@ class State {
         $classMap = [];
         $toProcess = [];
         foreach ($this->interfaces as $interface) {
-            $name = strtolower($interface->name->value);
+            $name = strtolower($interface->name->name);
             $map[$name] = [$name => $interface];
             $interfaceMap[$name] = [];
             if ($interface->extends) {
@@ -156,7 +158,7 @@ class State {
             }
         }
         foreach ($this->classes as $class) {
-            $name = strtolower($class->name->value);
+            $name = strtolower($class->name->name);
             $map[$name] = [$name => $class];
             $classMap[$name] = [$name];
             foreach ($class->implements as $interface) {
@@ -199,7 +201,8 @@ class State {
         }
     }
 
-    private function findNewCalls() {
+    private function findNewCalls(): array
+    {
         $newCalls = [];
         foreach ($this->blocks as $block) {
             $newCalls = $this->findTypedBlock("Expr_New", $block, $newCalls);
@@ -207,7 +210,8 @@ class State {
         return $newCalls;
     }
 
-    private function findMethodCalls() {
+    private function findMethodCalls(): array
+    {
         $methodCalls = [];
         foreach ($this->blocks as $block) {
             $methodCalls = $this->findTypedBlock("Expr_MethodCall", $block, $methodCalls);
@@ -215,9 +219,10 @@ class State {
         return $methodCalls;
     }
 
-    protected function findTypedBlock($type, Block $block, $result = []) {
-        $toProcess = new SplObjectStorage;
-        $processed = new SplObjectStorage;
+    protected function findTypedBlock(string $type, Block $block, array $result = []): array
+    {
+        $toProcess = new SplObjectStorage();
+        $processed = new SplObjectStorage();
         $toProcess->attach($block);
         while (count($toProcess) > 0) {
             foreach ($toProcess as $block) {
@@ -227,8 +232,7 @@ class State {
                     if ($op->getType() === $type) {
                         $result[] = $op;
                     }
-                    foreach ($op->getSubBlocks() as $name) {
-                        $sub = $op->$name;
+                    foreach ($op->getSubBlocks() as $name => $sub) {
                         if (is_null($sub)) {
                             continue;
                         }

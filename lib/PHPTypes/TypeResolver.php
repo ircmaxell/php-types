@@ -1,7 +1,7 @@
 <?php
 
-/*
- * This file is part of PHP-Types, a type reconstruction lib for PHP
+/**
+ * This file is part of PHP-Types, a Type Inference and resolver enginefor PHP
  *
  * @copyright 2015 Anthony Ferrara. All rights reserved
  * @license MIT See LICENSE at the root of the project for more info
@@ -9,18 +9,20 @@
 
 namespace PHPTypes;
 
-class TypeResolver {
-    
+class TypeResolver
+{
     protected $state;
 
     protected $callableUnion;
 
-    public function __construct(State $state) {
+    public function __construct(State $state)
+    {
         $this->state = $state;
         $this->callableUnion = Type::fromDecl("string|array|object");
     }
 
-    public function resolves(Type $a, Type $b) {
+    public function resolves(Type $a, Type $b)
+    {
         if ($a->equals($b)) {
             return true;
         }
@@ -82,7 +84,8 @@ class TypeResolver {
         return false;
     }
 
-    private function checkUserTypes($a, $b) {
+    private function checkUserTypes($a, $b)
+    {
         $a = strtolower($a);
         $b = strtolower($b);
         if (isset($this->state->classResolves[$b][$a])) {
