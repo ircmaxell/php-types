@@ -1,7 +1,7 @@
 <?php
 
-/*
- * This file is part of PHP-Types, a type reconstruction lib for PHP
+/**
+ * This file is part of PHP-Types, a Type Inference and resolver enginefor PHP
  *
  * @copyright 2015 Anthony Ferrara. All rights reserved
  * @license MIT See LICENSE at the root of the project for more info
@@ -11,26 +11,30 @@ namespace PHPTypes;
 
 use PHPCfg\Parser;
 use PHPCfg\Printer;
-use PHPCfg\Script;
 use PHPCfg\Traverser;
 use PHPCfg\Visitor;
 use PhpParser;
 use PhpParser\ParserFactory;
+use PHPUnit\Framework\Attributes\DataProvider;
+use PHPUnit\Framework\TestCase;
+use RecursiveDirectoryIterator;
+use RecursiveIteratorIterator;
 
-class ReconstructorTest extends \PHPUnit_Framework_TestCase {
-
-    /** @dataProvider provideTestParseAndDump */
-    public function testParseAndDump($name, $code, $expectedDump) {
-        $astTraverser = new PhpParser\NodeTraverser;
-        $astTraverser->addVisitor(new PhpParser\NodeVisitor\NameResolver);
-        $parser = new Parser((new ParserFactory)->create(ParserFactory::PREFER_PHP7), $astTraverser);
+class ReconstructorTest extends TestCase
+{
+    #[DataProvider('provideTestParseAndDump')]
+    public function testParseAndDump($name, $code, $expectedDump)
+    {
+        $astTraverser = new PhpParser\NodeTraverser();
+        $astTraverser->addVisitor(new PhpParser\NodeVisitor\NameResolver());
+        $parser = new Parser((new ParserFactory())->createForNewestSupportedVersion(), $astTraverser);
         $script = $parser->parse($code, 'foo.php');
 
         $traverser = new Traverser();
         $traverser->addVisitor(new Visitor\Simplifier());
         $traverser->traverse($script);
 
-        $reconstructor = new TypeReconstructor;
+        $reconstructor = new TypeReconstructor();
         $state = new State($script);
         $reconstructor->resolve($state);
 
@@ -41,12 +45,13 @@ class ReconstructorTest extends \PHPUnit_Framework_TestCase {
         );
     }
 
-    public function provideTestParseAndDump() {
+    public static function provideTestParseAndDump()
+    {
         $dir = __DIR__ . '/../code';
-        
-        $iter = new \RecursiveIteratorIterator(
-            new \RecursiveDirectoryIterator($dir),
-            \RecursiveIteratorIterator::LEAVES_ONLY
+
+        $iter = new RecursiveIteratorIterator(
+            new RecursiveDirectoryIterator($dir),
+            RecursiveIteratorIterator::LEAVES_ONLY
         );
 
         foreach ($iter as $file) {
@@ -59,7 +64,8 @@ class ReconstructorTest extends \PHPUnit_Framework_TestCase {
         }
     }
 
-    protected function canonicalize($str) {
+    protected function canonicalize($str)
+    {
         // trim from both sides
         $str = trim($str);
 

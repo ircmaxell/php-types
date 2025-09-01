@@ -5,11 +5,11 @@ $y = 2;
 -----
 Block#1
     Expr_Assign
-        var: Var<int>#1<$x>
+        var: TEMP<int>(#1 <VARIABLE($x)>)
         expr: LITERAL<int>(1)
-        result: Var<int>#2
+        result: TEMP<int>(#2)
     Expr_Assign
-        var: Var<int>#3<$y>
+        var: TEMP<int>(#3 <VARIABLE($y)>)
         expr: LITERAL<int>(2)
-        result: Var<int>#4
+        result: TEMP<int>(#4)
     Terminal_Return
